@@ -19,3 +19,7 @@ Challenges können mehrfach oder einfach vorkommen
 Challenges sollen fortlaufend numeriert sein, sodass man vergangene challenges referenzieren kann
 ratelimit?
 
+
+### v2
+
+verschiedene Punkte für unterschiedlich teure challenges
