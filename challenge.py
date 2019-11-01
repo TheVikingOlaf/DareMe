@@ -26,8 +26,8 @@ class Challenge:
     def _compile(self, passed_challenges):
         res = self.raw_text
         if not self.is_vanilla:
-            res = res.replace("%RANDOM", str(Challenge.get_random_passed_owner(passed_challenges)))
-            res = res.replace("%LAST", str(Challenge.get_last_passed_owner(passed_challenges)))
+            res = res.replace("$RANDOM", str(Challenge.get_random_passed_owner(passed_challenges)))
+            res = res.replace("$LAST", str(Challenge.get_last_passed_owner(passed_challenges)))
         return res
 
     @classmethod
@@ -40,7 +40,7 @@ class Challenge:
 
     @property
     def is_vanilla(self):
-        burned = ["%LAST", "%RANDOM"]
+        burned = ["$LAST", "$RANDOM"]
         return not any(b in self.raw_text for b in burned)
 
     def valid(self, needs_vanilla=False):
