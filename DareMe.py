@@ -37,7 +37,7 @@ with ThermalPrinter(port='/dev/serial0') as printer:
         if coinInserted:
             coinInserted = False
             print("Coin inserted. New credit: {0:.2f}€".format(coinsValue / 100))
-            msg = d.compile(stack.pick(), stack.passed)
+            msg = d.compile(stack.pick(), stack.cur_count)
             print(msg)
-            printer.out(msg, strike=True)
+            printer.out(msg, justify='C', strike=True)
             printer.feed(2)

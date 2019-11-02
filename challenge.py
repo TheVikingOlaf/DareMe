@@ -89,6 +89,10 @@ class ChallengeStack:
                 count += 1
         return count
 
+    @property
+    def cur_count(self):
+        return self.passed-1
+
     def __str__(self):
         return "CS<{}s, {}m".format(self.s_c, self.m_c)
 
