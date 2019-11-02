@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import datetime
+import textwrap
 
 
 class Dare:
@@ -17,8 +18,9 @@ class Dare:
             return Dare("\n".join(lines))
 
     def compile(self, dare_content, num):
+        dedented = textwrap.dedent(dare_content).strip()
         res = self.raw_text
-        res = res.replace("$DARE", str(dare_content))
+        res = res.replace("$DARE", textwrap.fill(dedented, width=32))
         res = res.replace("$DATE", str(Dare.british_date()))
         res = res.replace("$NUM", str(num))
         return res
