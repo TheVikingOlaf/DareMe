@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-from os.path import expanduser
-
-import RPi.GPIO as GPIO
 from challenge import ChallengeStack
+from os.path import expanduser
+import RPi.GPIO as GPIO
+
+coin_pin = 4
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(coin_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 coinsValue: float = 0.00
 coinInserted: bool = False
 
-GPIO.add_event_detect(4, GPIO.RISING)
+GPIO.add_event_detect(coin_pin, GPIO.RISING)
+
 
 def coin_added(value):
     global coinInserted
@@ -19,10 +21,11 @@ def coin_added(value):
     coinInserted = True
     print(value)
 
-GPIO.add_event_callback(4, coin_added)
+
+GPIO.add_event_callback(coin_pin, coin_added)
 
 home = expanduser("~")
-cf = home+"/challenges"
+cf = home + "/challenges"
 stack = ChallengeStack.from_folder(cf)
 print(stack)
 
@@ -31,3 +34,4 @@ while True:
         coinInserted = False
         print("Coin inserted. New credit: {0:.2f}€".format(coinsValue / 100))
         print("{}: {}".format(stack.passed, stack.pick()))
+d = Dare.from_file(home + "/dare.txt")
