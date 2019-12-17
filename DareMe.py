@@ -25,7 +25,7 @@ def guard_interval_passed(timestamp: datetime.datetime) -> bool:
         return True
     now = datetime.datetime.utcnow()
     delta = now - timestamp
-    if delta.total_seconds() > GUARD_INTERVAL_IN_SECONDS:
+    if int(delta.total_seconds()) >= GUARD_INTERVAL_IN_SECONDS:
         return True
     return False
 
@@ -55,4 +55,4 @@ with ThermalPrinter(port='/dev/serial0') as printer:
             printer.out(msg, justify='C', strike=True)
             printer.feed(2)
             last_timestamp = datetime.datetime.utcnow()
-            coinInserted = False
+        coinInserted = False
