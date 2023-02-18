@@ -100,14 +100,12 @@ class ChallengeStack:
     @classmethod
     def from_folder(cls, folderpath, startnumber=0):
         stack = ChallengeStack(startnumber)
-        with open(folderpath + "/single.txt", "r") as sc:
-            single_raw = sc.readlines()
-            for s in single_raw:
-                stack.append(Challenge(s))
-        with open(folderpath + "/multi.txt", "r") as mc:
-            multi_raw = mc.readlines()
-            for m in multi_raw:
-                stack.append(Challenge(m, False))
+        with open(folderpath + "/single.txt", "r") as single_challenge_fh:
+            for line in filter(None, single_challenge_fh.read().splitlines()):
+                stack.append(Challenge(line))
+        with open(folderpath + "/multi.txt", "r") as multi_challenge_fh:
+            for line in filter(None, multi_challenge_fh.readlines()):
+                stack.append(Challenge(line, False))
         return stack
 
 
