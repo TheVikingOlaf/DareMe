@@ -2,15 +2,17 @@
 
 import os
 from os.path import expanduser
-from random import randrange
-from random import choice
+import random
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class Challenge:
     def __init__(self, new_text, single=True):
-        self.raw_text = new_text
-        self.single = single
-        self.pickcount = 0
+        self.raw_text: str = new_text
+        self.single: bool = single
+        self.pick_count: int = 0
 
     @property
     def multi(self):
@@ -22,13 +24,22 @@ class Challenge:
 
     @classmethod
     def get_random_passed_owner(cls, passed_challenges):
-        return randrange(passed_challenges)
+        return random.randrange(passed_challenges)
 
-    def _compile(self, passed_challenges):
+    @property
+    def num_randoms_required(self) -> int:
+        return self.raw_text.count("$RANDOM")
+
+    def _compile(self, passed_challenges: int):
         res = self.raw_text
         if not self.is_vanilla:
-            res = res.replace("$RANDOM", str(Challenge.get_random_passed_owner(passed_challenges)))
-            res = res.replace("$LAST", str(Challenge.get_last_passed_owner(passed_challenges)))
+            randoms = random.sample(range(passed_challenges), self.num_randoms_required)
+            _logger.debug(f"Not a vanilla challenge, picked {self.num_randoms_required} randoms: {randoms}")
+            for random_guest_number in randoms:
+                res = res.replace("$RANDOM", str(random_guest_number), 1)
+
+            if "$LAST" in res:
+                res = res.replace("$LAST", str(Challenge.get_last_passed_owner(passed_challenges)))
         return res
 
     @classmethod
@@ -44,38 +55,38 @@ class Challenge:
         burned = ["$LAST", "$RANDOM"]
         return not any(b in self.raw_text for b in burned)
 
-    def valid(self, needs_vanilla=False):
-        if needs_vanilla and not self.is_vanilla:
-            return False
+    def valid(self, num_passed_challenges: int, needs_vanilla: bool =False):
         if self.multi:
             return True
-        return 0 == self.pickcount
+        if self.num_randoms_required > num_passed_challenges:
+            _logger.debug(f"Challenge needs {self.num_randoms_required} randoms but only {num_passed_challenges} have been printed, yet.")
+            return False
+        return 0 == self.pick_count
 
     def pick(self, passed_challenges):
-        self.pickcount += 1
+        self.pick_count += 1
         return self._compile(passed_challenges)
 
 
 class ChallengeStack:
-    def __init__(self, startnumber=0):
-        self.challenges = []
-        self.passed = startnumber
+    def __init__(self, start_number=0):
+        self.challenges: list[Challenge] = []
+        self.num_passed_challenges = start_number
 
     def pick(self):
-        need_vanilla = 0 == self.passed
         found_valid = False
         while not found_valid:
-            c = choice(self.challenges)
-            if c.valid(need_vanilla):
+            c = random.choice(self.challenges)
+            if c.valid(num_passed_challenges=self.num_passed_challenges):
                 found_valid = True
-        self.passed+=1
-        return c.pick(self.passed)
+        self.num_passed_challenges+=1
+        return c.pick(self.num_passed_challenges)
 
     def append(self, challenge):
         self.challenges.append(challenge)
 
     @property
-    def s_c(self):
+    def num_single_challenges(self):
         count = 0
         for c in self.challenges:
             if c.single:
@@ -83,7 +94,7 @@ class ChallengeStack:
         return count
 
     @property
-    def m_c(self):
+    def num_multi_challenges(self):
         count = 0
         for c in self.challenges:
             if c.multi:
@@ -92,18 +103,21 @@ class ChallengeStack:
 
     @property
     def cur_count(self):
-        return self.passed-1
+        return self.num_passed_challenges-1
 
     def __str__(self):
-        return "CS<{}s, {}m".format(self.s_c, self.m_c)
+        return (
+            f"<ChallengeStack | Single: {self.num_single_challenges}, "
+            f"Multi: {self.num_multi_challenges}, "
+            f"Passed challenges: {self.num_passed_challenges}>")
 
     @classmethod
-    def from_folder(cls, folderpath, startnumber=0):
-        stack = ChallengeStack(startnumber)
-        with open(folderpath + "/single.txt", "r") as single_challenge_fh:
+    def from_folder(cls, folder_path, start_number=0):
+        stack = ChallengeStack(start_number=start_number)
+        with open(folder_path + "/single.txt", "r") as single_challenge_fh:
             for line in filter(None, single_challenge_fh.read().splitlines()):
                 stack.append(Challenge(line))
-        with open(folderpath + "/multi.txt", "r") as multi_challenge_fh:
+        with open(folder_path + "/multi.txt", "r") as multi_challenge_fh:
             for line in filter(None, multi_challenge_fh.readlines()):
                 stack.append(Challenge(line, False))
         return stack
@@ -113,8 +127,8 @@ if "__main__" == __name__:
     home = expanduser("~")
     challenges_path = home+"/challenges"
     start_number = int(os.environ.get("CHALLENGE_START_NUMBER", 0))
-    stack = ChallengeStack.from_folder(folderpath=challenges_path, startnumber=start_number)
+    stack = ChallengeStack.from_folder(folder_path=challenges_path, start_number=start_number)
     print(stack)
 
     for i in range(20):
-        print("{}: {}".format(stack.passed, stack.pick()))
+        print("{}: {}".format(stack.num_passed_challenges, stack.pick()))
