@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 from os.path import expanduser
 from random import randrange
 from random import choice
@@ -112,8 +113,9 @@ class ChallengeStack:
 
 if "__main__" == __name__:
     home = expanduser("~")
-    cf = home+"/challenges"
-    stack = ChallengeStack.from_folder(cf)
+    challenges_path = home+"/challenges"
+    start_number = int(os.environ.get("CHALLENGE_START_NUMBER", 0))
+    stack = ChallengeStack.from_folder(folderpath=challenges_path, startnumber=start_number)
     print(stack)
 
     for i in range(20):
